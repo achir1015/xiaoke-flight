@@ -7,7 +7,7 @@ config_version=5
 
 config/name="小柯機器人3D真實飛行"
 config/description="小柯機器人系列：3D 客機模擬飛行，起飛、降落、天氣與機上突發狀況應變"
-config/version="1.0.0"
+config/version="1.0.1"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"

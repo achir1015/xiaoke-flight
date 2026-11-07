@@ -3,7 +3,7 @@ extends Node
 
 signal toast(text: String, kind: String)
 
-const APP_VERSION := "1.0.0"
+const APP_VERSION := "1.0.1"
 const CALLSIGN := "小柯八八八"
 
 # 經緯度 → 世界座標（公尺）。水平約 1:8 縮小台灣，北方是 -Z、東方是 +X。
