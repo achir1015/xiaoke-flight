@@ -55,7 +55,7 @@ var _sub_hide := 0.0
 var _alert_t := 0.0
 var portrait_hint: PanelContainer
 var right_panel: PanelContainer
-var clock_lbl: Label
+var clock_lbl: RichTextLabel
 var check_panel: PanelContainer
 var check_lbl: RichTextLabel
 var title_clock: Label
@@ -206,7 +206,10 @@ func show_title() -> void:
 	var b0 := _btn("任務關卡", show_levels, true, 21)
 	b0.custom_minimum_size = Vector2(bw, 54)
 	v.add_child(b0)
-	for it in [["自由飛行", show_free], ["遊戲說明", func(): show_help(0)], ["設定", show_settings], ["更新紀錄", show_changelog], ["建立捷徑", show_install]]:
+	var items: Array = [["自由飛行", show_free], ["遊戲說明", func(): show_help(0)], ["設定", show_settings], ["更新紀錄", show_changelog], ["建立捷徑", show_install]]
+	if OS.has_feature("web") and G.is_touch():
+		items.append(["全螢幕", func(): G.go_fullscreen()])
+	for it in items:
 		var b := _btn(it[0], it[1], false, 17)
 		b.custom_minimum_size = Vector2(bw, 44)
 		v.add_child(b)
@@ -323,9 +326,15 @@ func build_game() -> void:
 		b.custom_minimum_size = Vector2(92, 36)
 		tl.add_child(b)
 	# 當地日期時間
-	clock_lbl = _lbl("", 14, TXT)
-	clock_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	clock_lbl.custom_minimum_size.x = 300
+	clock_lbl = RichTextLabel.new()
+	clock_lbl.fit_content = true
+	clock_lbl.scroll_active = false
+	clock_lbl.bbcode_enabled = true
+	clock_lbl.autowrap_mode = TextServer.AUTOWRAP_OFF
+	clock_lbl.custom_minimum_size = Vector2(100, 0)
+	clock_lbl.position = Vector2(8, 234)
+	clock_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	clock_lbl.add_theme_font_size_override("normal_font_size", 13)
 	clock_lbl.add_theme_constant_override("outline_size", 6)
 	clock_lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
 	game_box.add_child(clock_lbl)
@@ -640,7 +649,7 @@ func _process(delta: float) -> void:
 		_clock_t = 1.0
 		var c := clock_text()
 		if clock_lbl:
-			clock_lbl.text = c
+			clock_lbl.text = "[center]" + clock_short() + "[/center]"
 		if title_clock and is_instance_valid(title_clock):
 			title_clock.text = c
 	if _alert_t > 0.0:
@@ -687,8 +696,6 @@ func _process(delta: float) -> void:
 
 func _layout() -> void:
 	var vs := root.get_viewport_rect().size
-	if clock_lbl:
-		clock_lbl.position = Vector2(vs.x - 310.0, 222.0)
 	if sub_panel:
 		sub_panel.position.x = clampf(vs.x * 0.5 - 170.0, 470.0, vs.x - 330.0 - 494.0)
 	if right_panel:
@@ -703,6 +710,14 @@ func clock_text() -> String:
 	var d := Time.get_datetime_dict_from_unix_time(int(u))
 	var wd: String = ["日", "一", "二", "三", "四", "五", "六"][int(d.weekday)]
 	return "當地時間 %d/%d/%d（%s）%02d:%02d:%02d" % [d.year, d.month, d.day, wd, d.hour, d.minute, d.second]
+
+func clock_short() -> String:
+	var u := Time.get_unix_time_from_system() + int(Time.get_time_zone_from_system().get("bias", 480)) * 60
+	var d := Time.get_datetime_dict_from_unix_time(int(u))
+	var wd: String = ["日", "一", "二", "三", "四", "五", "六"][int(d.weekday)]
+	return "當地時間
+%d/%d（%s）
+%02d:%02d:%02d" % [d.month, d.day, wd, d.hour, d.minute, d.second]
 
 # ── 字幕與提示 ──
 func _on_line(_id: String, speaker: String, text: String) -> void:
@@ -1256,4 +1271,5 @@ func _on_update(v: String, notes: String) -> void:
 	root.move_child(update_bar, root.get_child_count() - 1)
 
 func pause_menu() -> void:
-	show_dialog("暫停", "", [["繼續飛行", func(): main.toggle_pause(), true], ["重新開始", func(): main.restart_flight(), false], ["遊戲說明", func(): show_help(0), false], ["設定", show_settings, false], ["回主選單", func(): main.to_title(), false]], 420)
+	var b: Array = [["繼續飛行", func(): main.toggle_pause(), true], ["重新開始", func(): main.restart_flight(), false], ["遊戲說明", func(): show_help(0), false], ["設定", show_settings, false], ["全螢幕", func(): G.go_fullscreen(), false], ["回主選單", func(): main.to_title(), false]]
+	show_dialog("暫停", "", b, 460)

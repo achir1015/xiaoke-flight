@@ -182,6 +182,18 @@ func finish_level(i: int, st: int, score: int) -> void:
 func is_touch() -> bool:
 	return OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios") or args.has("touch")
 
+# 手機網頁：全螢幕並鎖定橫向（必須在點擊後幾秒內呼叫）
+func go_fullscreen() -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("(function(){try{var d=document.documentElement;if(!document.fullscreenElement&&d.requestFullscreen){d.requestFullscreen({navigationUI:'hide'}).then(function(){if(screen.orientation&&screen.orientation.lock){screen.orientation.lock('landscape').catch(function(){});}}).catch(function(){});}}catch(e){}})()", true)
+	else:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+
+func is_fullscreen() -> bool:
+	if OS.has_feature("web"):
+		return bool(JavaScriptBridge.eval("!!document.fullscreenElement", true))
+	return DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
+
 func fmt_int(n: int) -> String:
 	var s := str(absi(n))
 	var out := ""

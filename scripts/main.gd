@@ -32,6 +32,9 @@ var _manual_t := 0.0
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	M.init_fonts()
+	if G.is_touch():
+		# 手機螢幕小：介面放大一點
+		get_window().content_scale_size = Vector2i(1120, 630)
 	hud = Hud.new()
 	hud.main = self
 	hud.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -131,6 +134,8 @@ func restart_flight() -> void:
 	start_flight(flight, level)
 
 func start_flight(cfg: Dictionary, li: int) -> void:
+	if G.is_touch() and not G.test_mode:
+		G.go_fullscreen()
 	get_tree().paused = false
 	paused = false
 	flight = cfg
