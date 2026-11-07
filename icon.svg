@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f6fd1"/><stop offset="0.62" stop-color="#6fb6f2"/><stop offset="1" stop-color="#cfe9ff"/></linearGradient>
+<linearGradient id="head" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#d5dee9"/></linearGradient>
+<linearGradient id="body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cdd7e3"/></linearGradient>
+<clipPath id="r"><rect width="512" height="512" rx="112"/></clipPath>
+</defs>
+<g clip-path="url(#r)">
+<rect width="512" height="512" fill="url(#sky)"/>
+<ellipse cx="96" cy="420" rx="150" ry="46" fill="#ffffff" opacity="0.85"/>
+<ellipse cx="420" cy="452" rx="170" ry="52" fill="#ffffff" opacity="0.9"/>
+<ellipse cx="300" cy="476" rx="160" ry="40" fill="#ffffff"/>
+<!-- 客機 -->
+<g transform="translate(256 210) rotate(-14)">
+<path d="M-60 -6 L-150 -96 L-122 -100 L10 -10 Z" fill="#c9d4e2"/>
+<path d="M-60 6 L-176 96 L-140 104 L10 12 Z" fill="#e6edf5"/>
+<rect x="-128" y="-28" width="44" height="20" rx="10" fill="#8995a6"/>
+<rect x="-128" y="24" width="44" height="22" rx="11" fill="#8995a6"/>
+<path d="M-210 -16 L-188 -76 L-168 -76 L-170 -14 Z" fill="#f0883a"/>
+<path d="M-206 -6 L-236 -30 L-222 -32 L-186 -6 Z" fill="#c9d4e2"/>
+<path d="M-214 -18 Q-180 -24 150 -20 Q206 -16 222 0 Q206 16 150 20 Q-180 24 -214 12 Z" fill="url(#body)" stroke="#9fb0c4" stroke-width="3"/>
+<path d="M-200 6 Q0 10 196 6" fill="none" stroke="#f0883a" stroke-width="6"/>
+<path d="M-196 12 Q0 16 190 12" fill="none" stroke="#2f6fd0" stroke-width="4"/>
+<path d="M176 -12 Q200 -9 210 -2 L180 -2 Z" fill="#1b2a44"/>
+</g>
+<!-- 小柯機器人機長 -->
+<g transform="translate(0 6)">
+<rect x="150" y="360" width="212" height="160" rx="54" fill="#2a4f86"/>
+<path d="M220 360 L256 420 L292 360 Z" fill="#ffffff"/>
+<path d="M248 372 L264 372 L262 430 L256 440 L250 430 Z" fill="#f0883a"/>
+<rect x="166" y="392" width="40" height="10" rx="4" fill="#ffc23a"/>
+<rect x="306" y="392" width="40" height="10" rx="4" fill="#ffc23a"/>
+<rect x="160" y="232" width="192" height="142" rx="56" fill="url(#head)" stroke="#9aa6b5" stroke-width="5"/>
+<rect x="184" y="262" width="144" height="82" rx="30" fill="#152038"/>
+<circle cx="226" cy="300" r="15" fill="#62f0ff"/>
+<circle cx="286" cy="300" r="15" fill="#62f0ff"/>
+<path d="M234 324 Q256 338 278 324" fill="none" stroke="#62f0ff" stroke-width="7" stroke-linecap="round"/>
+<!-- 耳機 -->
+<path d="M152 300 Q150 220 256 214 Q362 220 360 300" fill="none" stroke="#2b3240" stroke-width="10"/>
+<rect x="138" y="278" width="30" height="56" rx="12" fill="#2b3240"/>
+<rect x="344" y="278" width="30" height="56" rx="12" fill="#2b3240"/>
+<path d="M156 330 Q170 368 218 360" fill="none" stroke="#2b3240" stroke-width="6"/>
+<circle cx="220" cy="359" r="8" fill="#2b3240"/>
+<!-- 機長帽 -->
+<path d="M168 236 Q170 176 256 168 Q342 176 344 236 Z" fill="#1d3a66"/>
+<rect x="160" y="226" width="192" height="24" rx="10" fill="#14284a"/>
+<rect x="160" y="234" width="192" height="6" fill="#ffc23a"/>
+<path d="M236 192 L256 182 L276 192 L268 206 L244 206 Z" fill="#ffc23a"/>
+</g>
+</g>
+</svg>

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "flight-web",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8767", "--directory", "../build/flight-web"],
+      "port": 8767
+    }
+  ]
+}
