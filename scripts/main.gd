@@ -429,6 +429,75 @@ func _checks(delta: float) -> void:
 		_say_once("co_landing_check")
 	if d < 5000.0 and plane.agl < 300.0 and plane.gear_pos < 0.5 and plane.vs < -1.0 and not plane.ap_on:
 		_say_once("x_gear")
+	_landing_advice(delta, d)
+
+# ── 降落叮嚀與注意事項 ──
+var _adv_cd := 0.0
+func _landing_advice(delta: float, d: float) -> void:
+	if String(flight.get("mode", "")) == "takeoff":
+		return
+	var airborne := not plane.on_ground
+	# 開始下降：機長廣播（天氣、當地時間）＋空服員客艙準備
+	if airborne and d < 30000.0 and _t > 20.0 and not _said.has("descent"):
+		_said["descent"] = true
+		var wx: String = {"rain": "cap_wx_rain", "snow": "cap_wx_snow", "storm": "cap_wx_storm", "typhoon": "cap_wx_typhoon"}.get(director.weather, "cap_wx_good")
+		var now := Time.get_datetime_dict_from_unix_time(int(Time.get_unix_time_from_system()) + _tz_offset())
+		var wtxt: String = Texts.LINES[wx][1]
+		var text := "各位旅客，這裡是機長廣播。我們已經開始下降，準備降落%s，請回到座位繫好安全帶。%s目的地當地時間是 %02d:%02d。" % [dest_name(), wtxt, now.hour, now.minute]
+		Snd.play("seatbelt", 0.8)
+		hud.seatbelt = true
+		Snd.say_combo(["cap_descent", wx, "cap_now", "cap_h_%d" % int(now.hour), "cap_m_%d" % int(now.minute)], "captain", text)
+		Snd.say("f_landing_prep")
+		hud.alert("安全帶指示燈已打開，準備降落", 2.5)
+	if airborne and d < 17000.0 and not _said.has("lchk"):
+		_said["lchk"] = true
+		Snd.say("x_land_checklist" if not plane.ap_on else "x_ap_land")
+		hud.show_checklist(true)
+		if director.weather in ["rain", "snow", "typhoon", "storm"]:
+			Snd.say("x_land_wet")
+		if absf((plane.wind).dot(Vector3(-dest_rw.dir.z, 0, dest_rw.dir.x))) > 5.0:
+			Snd.say("x_land_crosswind")
+	if airborne and d < 11000.0:
+		_say_once("cap_crew_landing")
+		if not plane.lights_on:
+			_say_once("x_land_lights")
+	# 進場偏差提醒（手動飛行時，每 7 秒最多一次）
+	_adv_cd -= delta
+	if airborne and not plane.ap_on and d < 11000.0 and plane.agl < 800.0 and _adv_cd <= 0.0 and not Snd.busy():
+		var dev := plane.ils_dev(dest_rw)
+		var kt := plane.ias * G.MS2KT
+		var vapp := Aircraft.VAPP * G.MS2KT
+		var id := ""
+		if plane.agl < 450.0 and plane.gear_pos < 0.9: id = "x_gear"
+		elif plane.agl < 500.0 and plane.flaps < 3: id = "x_land_flaps"
+		elif kt > vapp + 22.0: id = "x_land_fast"
+		elif kt < vapp - 14.0: id = "x_land_slow"
+		elif dev.y > 0.8: id = "x_land_high"
+		elif dev.y < -0.8: id = "x_land_low"
+		elif dev.x > 1.5: id = "x_land_right"
+		elif dev.x < -1.5: id = "x_land_left"
+		elif not _said.has("x_land_ok") and plane.agl < 500.0:
+			id = "x_land_ok"
+			_said["x_land_ok"] = true
+			Snd.callout("co_stable")
+		if plane.agl < 110.0 and (absf(dev.x) > 3.0 or absf(dev.y) > 1.5 or kt > vapp + 35.0) and not _said.has("ga"):
+			_said["ga"] = true
+			id = "x_land_goaround"
+		if id != "":
+			Snd.say(id, true)
+			_adv_cd = 7.0
+	if airborne and not plane.ap_on and plane.agl < 14.0 and plane.vs < -1.0 and d < 3000.0:
+		_say_once("x_land_flare")
+	# 落地後
+	if plane.on_ground and not _land.is_empty():
+		if not _said.has("ldbrake"):
+			_said["ldbrake"] = true
+			if not plane.ap_on:
+				Snd.say("x_land_brake", true)
+		if plane.reverse and plane.ias * G.MS2KT > 80.0:
+			_say_once("co_reverse")
+		if plane.ias * G.MS2KT < 60.0:
+			_say_once("co_60kt")
 
 # ── 操作 ──
 func toggle_gear() -> void:
@@ -632,13 +701,20 @@ func _landed(apt_id: String) -> void:
 	if fails > 0 and evr.size() == fails:
 		stars = 0
 	G.finish_level(level, stars, score)
+	hud.show_checklist(false)
 	Snd.say_all(["t_landed", "cap_landed"])
+	var hr := int(Time.get_datetime_dict_from_unix_time(int(Time.get_unix_time_from_system()) + _tz_offset()).hour)
+	Snd.say("cap_bless_night" if (hr >= 19 or hr < 5 or flight.get("time", "") == "night") else "cap_bless_day")
+	Snd.say("f_landed_stay")
+	Snd.say("f_bless")
 	Snd.say("x_good_landing" if fpm < 420 else "x_hard_landing")
+	if stars > 0:
+		Snd.say_all(["co_bless", "x_bless"])
 	if fpm < 600:
 		Snd.play("applause", 0.8)
 	Snd.play("fanfare" if stars > 0 else "fail", 0.7)
 	var res := {"crash": "", "fpm": fpm, "land_word": word, "center": float(_land.center), "apt": G.airport(apt_id).get("name", apt_id) + ("（不是目的地）" if wrong else ""), "events": evr, "score": maxi(score, 0), "stars": stars, "level": level}
-	get_tree().create_timer(5.0).timeout.connect(func(): if state == "done": hud.show_result(res))
+	get_tree().create_timer(9.0).timeout.connect(func(): if state == "done": hud.show_result(res))
 
 func _finish_takeoff() -> void:
 	state = "done"

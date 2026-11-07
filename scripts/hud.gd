@@ -56,6 +56,8 @@ var _alert_t := 0.0
 var portrait_hint: PanelContainer
 var right_panel: PanelContainer
 var clock_lbl: Label
+var check_panel: PanelContainer
+var check_lbl: RichTextLabel
 var title_clock: Label
 var _last_vp := Vector2.ZERO
 
@@ -416,6 +418,22 @@ func build_game() -> void:
 	cabin_view.custom_minimum_size = Vector2(300, 169)
 	cabin_view.clicked.connect(_cabin_talk)
 	cv.add_child(cabin_view)
+	# 降落檢查表
+	check_panel = _panel(Color(0.05, 0.12, 0.2, 0.9), 10, 10)
+	check_panel.visible = false
+	check_panel.custom_minimum_size.x = 250
+	check_panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	lv.add_child(check_panel)
+	var ckv := VBoxContainer.new()
+	ckv.add_theme_constant_override("separation", 2)
+	check_panel.add_child(ckv)
+	ckv.add_child(_lbl("降落檢查表", 16, ACC))
+	check_lbl = RichTextLabel.new()
+	check_lbl.bbcode_enabled = true
+	check_lbl.fit_content = true
+	check_lbl.custom_minimum_size = Vector2(240, 0)
+	check_lbl.add_theme_font_size_override("normal_font_size", 14)
+	ckv.add_child(check_lbl)
 	# 左下：方向鍵
 	_build_pad()
 	# 下方：主飛行儀表與操縱桿
@@ -599,6 +617,7 @@ func show_game() -> void:
 	open_map(false)
 	divert_box.visible = false
 	xk_panel.visible = false
+	show_checklist(false)
 	seatbelt = false
 	squawk = "2000"
 	_clear(xk_log)
@@ -658,6 +677,8 @@ func _process(delta: float) -> void:
 			pfd.ils = Vector2(99, 99)
 	else:
 		pfd.ils = Vector2(99, 99)
+	if check_panel.visible:
+		_update_checklist(p)
 	minimap.route = main.route_points()
 	minimap.dest_id = main.dest_id
 	minimap.closed = main.director.closed
@@ -811,6 +832,30 @@ func offer_divert(lst: Array) -> void:
 		v.add_child(b)
 	v.add_child(_btn("關閉", func(): divert_box.visible = false, false, 13))
 	divert_box.visible = true
+
+func show_checklist(on: bool) -> void:
+	if check_panel:
+		check_panel.visible = on
+
+func _update_checklist(p: Aircraft) -> void:
+	var rw: Dictionary = main.dest_rw
+	var dev := p.ils_dev(rw) if not rw.is_empty() else Vector2.ZERO
+	var kt := p.ias * G.MS2KT
+	var items := [
+		["安全帶指示燈", seatbelt],
+		["落地燈", p.lights_on],
+		["起落架放下（三綠燈）", p.gear_pos > 0.98],
+		["襟翼 30°", p.flaps == 3],
+		["速度 130～155 節", kt > 130.0 and kt < 155.0],
+		["對準跑道中心線", absf(dev.x) < 1.0],
+		["在 3° 下滑道上", absf(dev.y) < 0.5],
+		["減速板收起（落地後再開）", not p.spoilers or p.on_ground],
+	]
+	var t := ""
+	for it in items:
+		t += ("[color=#7fe08a]● [/color]" if it[1] else "[color=#ff8a70]○ [/color]") + String(it[0]) + "
+"
+	check_lbl.text = t.strip_edges()
 
 # ── 客艙 ──
 func show_cabin(on: bool) -> void:

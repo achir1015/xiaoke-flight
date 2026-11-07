@@ -643,7 +643,7 @@ func _autopilot(dt: float) -> void:
 			_ap_q = -0.05
 			in_yaw = clampf(G.angdiff(rw.hdg, heading) * 0.08 - xtrack * 0.04, -1.0, 1.0)
 			ap_note = "反推力、減速板、自動煞車"
-			if ias < 2.0:
+			if Vector2(v.x, v.z).length() < 1.0:
 				throttle = 0.0
 				reverse = false
 				parking = true
