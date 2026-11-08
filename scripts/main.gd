@@ -33,8 +33,10 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	M.init_fonts()
 	if G.is_touch():
-		# 手機螢幕小：介面放大一點
-		get_window().content_scale_size = Vector2i(1120, 630)
+		# 手機螢幕小：介面放大一點；iPad 這類 4:3 螢幕寬度不夠，維持較寬的版面免得面板重疊
+		var ws := Vector2(DisplayServer.window_get_size())
+		var wide := ws.y <= 0.0 or ws.x / ws.y >= 1.7
+		get_window().content_scale_size = Vector2i(1120, 630) if wide else Vector2i(1366, 768)
 	hud = Hud.new()
 	hud.main = self
 	hud.process_mode = Node.PROCESS_MODE_ALWAYS

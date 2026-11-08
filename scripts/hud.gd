@@ -206,7 +206,9 @@ func show_title() -> void:
 	var b0 := _btn("任務關卡", show_levels, true, 21)
 	b0.custom_minimum_size = Vector2(bw, 54)
 	v.add_child(b0)
-	var items: Array = [["自由飛行", show_free], ["遊戲說明", func(): show_help(0)], ["設定", show_settings], ["更新紀錄", show_changelog], ["建立捷徑", show_install]]
+	var items: Array = [["自由飛行", show_free], ["遊戲說明", func(): show_help(0)], ["設定", show_settings], ["更新紀錄", show_changelog]]
+	if not G.is_ios():
+		items.append(["建立捷徑", show_install])
 	if OS.has_feature("web") and G.is_touch():
 		items.append(["全螢幕", func(): G.go_fullscreen()])
 	for it in items:
@@ -321,7 +323,10 @@ func build_game() -> void:
 	tl.position = Vector2(12, 12)
 	tl.add_theme_constant_override("separation", 6)
 	game_box.add_child(tl)
-	for it in [["暫停", func(): main.toggle_pause()], ["視角", func(): alert(main.cam.next_mode(), 1.2)], ["截圖", screenshot], ["地圖", func(): open_map(not map_big)], ["客艙", func(): show_cabin(not cabin_panel.visible)]]:
+	var tools: Array = [["暫停", func(): main.toggle_pause()], ["視角", func(): alert(main.cam.next_mode(), 1.2)], ["截圖", screenshot], ["地圖", func(): open_map(not map_big)], ["客艙", func(): show_cabin(not cabin_panel.visible)]]
+	if G.is_ios():
+		tools = tools.filter(func(e): return e[0] != "截圖")  # iOS 用系統截圖即可
+	for it in tools:
 		var b := _btn(it[0], it[1], false, 14, Color(0.1, 0.2, 0.38, 0.9))
 		b.custom_minimum_size = Vector2(92, 36)
 		tl.add_child(b)
@@ -970,6 +975,12 @@ func screenshot() -> void:
 		alert("截圖已存到 " + ProjectSettings.globalize_path(path), 3.0)
 	Snd.play("click")
 
+# iOS 版沒有「建立捷徑」，說明頁也拿掉那一頁
+func _help() -> Array:
+	if G.is_ios():
+		return Texts.HELP.filter(func(e): return e[1] != "install")
+	return Texts.HELP
+
 # ══════════════ 對話框 ══════════════
 func _modal(title: String, width := 460) -> VBoxContainer:
 	close_modal()
@@ -1096,9 +1107,9 @@ func show_help(page := 0) -> void:
 	tabs.add_theme_constant_override("separation", 4)
 	tsc.add_child(tabs)
 	var sel: Button = null
-	for i in Texts.HELP.size():
+	for i in _help().size():
 		var ii := i
-		var b := _btn(Texts.HELP[i][0], func(): show_help(ii), i == page, 14)
+		var b := _btn(_help()[i][0], func(): show_help(ii), i == page, 14)
 		b.custom_minimum_size = Vector2(136, 32)
 		tabs.add_child(b)
 		if i == page:
@@ -1113,12 +1124,12 @@ func show_help(page := 0) -> void:
 	tv.add_theme_constant_override("separation", 8)
 	tv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sc.add_child(tv)
-	tv.add_child(_lbl(Texts.HELP[page][0], 20))
+	tv.add_child(_lbl(_help()[page][0], 20))
 	var anim := HelpAnim.new()
-	anim.kind = Texts.HELP[page][1]
+	anim.kind = _help()[page][1]
 	anim.custom_minimum_size = Vector2(520, 180)
 	tv.add_child(anim)
-	var body := _lbl(Texts.HELP[page][2], 15)
+	var body := _lbl(_help()[page][2], 15)
 	body.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
 	body.custom_minimum_size.x = 515
 	tv.add_child(body)
@@ -1128,7 +1139,7 @@ func show_help(page := 0) -> void:
 	v.add_child(bh)
 	if page > 0:
 		bh.add_child(_btn("上一頁", func(): show_help(page - 1), false, 15))
-	if page < Texts.HELP.size() - 1:
+	if page < _help().size() - 1:
 		bh.add_child(_btn("下一頁", func(): show_help(page + 1), false, 15))
 	bh.add_child(_btn("關閉", func(): close_modal(), true, 15))
 	if Snd.auto_voice and (was != page or not Snd.voice.playing):
@@ -1197,7 +1208,7 @@ func show_settings() -> void:
 	for q in ["低（手機）", "中", "高"]:
 		qo.add_item(q)
 	qo.select(G.quality)
-	qo.item_selected.connect(func(i): G.quality = i; G.save_progress(); alert("畫面品質會在重新整理網頁後生效", 3.0))
+	qo.item_selected.connect(func(i): G.quality = i; G.save_progress(); alert("畫面品質會在重新整理網頁後生效" if OS.has_feature("web") else "畫面品質會在重新開啟遊戲後生效", 3.0))
 	qh.add_child(qo)
 	v.add_child(qh)
 	for it in [["俯仰反向（往上推＝抬頭）", G.invert_pitch, func(on): G.invert_pitch = on], ["說明頁自動朗讀", Snd.auto_voice, func(on): Snd.auto_voice = on], ["小柯用系統語音朗讀即時資訊", Snd.tts_on, func(on): Snd.tts_on = on]]:
@@ -1211,7 +1222,7 @@ func show_settings() -> void:
 	v.add_child(_lbl("ChatGPT 金鑰（選填，讓小柯回答更多問題）", 15, ACC))
 	var key := LineEdit.new()
 	key.secret = true
-	key.placeholder_text = "sk-……（只存在這個瀏覽器）"
+	key.placeholder_text = "sk-……（只存在這個瀏覽器）" if OS.has_feature("web") else "sk-……（只存在這台裝置）"
 	key.text = G.api_key
 	key.custom_minimum_size.x = 440
 	v.add_child(key)
@@ -1223,11 +1234,30 @@ func show_settings() -> void:
 	tts.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
 	tts.custom_minimum_size.x = 440
 	v.add_child(tts)
+	var note := _lbl("填入金鑰後，你問小柯的話和目前飛行狀態會直接傳送到 OpenAI 產生回答；不填金鑰則只用內建回答，不會連網。", 13, DIM)
+	note.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
+	note.custom_minimum_size.x = 440
+	v.add_child(note)
 	_modal_buttons(v, [["儲存", func():
-		G.api_key = key.text.strip_edges()
+		var k := key.text.strip_edges()
 		G.ai_model = mo.text.strip_edges() if mo.text.strip_edges() != "" else "gpt-5.4-mini"
-		G.save_progress()
-		Snd.save_settings(), true]])
+		Snd.save_settings()
+		if k == "" or (k == G.api_key and G.ai_consent):
+			G.api_key = k
+			G.save_progress()
+			return
+		show_dialog("使用 ChatGPT 前請確認", "啟用後，你在小柯對話框輸入的文字，以及目前的飛行狀態（高度、速度、目的地、天氣、機上狀況），會用你自己的金鑰傳送到 [b]OpenAI[/b] 產生回答。
+
+小柯機器人不會收集或保存這些內容；OpenAI 如何處理資料請參考 OpenAI 的隱私權政策。
+
+你可以隨時在設定裡清空金鑰來停用。", [["同意並啟用", func():
+			G.api_key = k
+			G.ai_consent = true
+			G.save_progress()
+			alert("已啟用 ChatGPT 回答", 2.5), true], ["不要", func():
+			G.api_key = ""
+			G.ai_consent = false
+			G.save_progress(), false]], 520), true]])
 
 func show_changelog() -> void:
 	var s := "目前版本：[b]v%s[/b]\n" % G.APP_VERSION
@@ -1236,7 +1266,10 @@ func show_changelog() -> void:
 	for e in Texts.CHANGELOG:
 		s += "\n[b]v%s[/b]　%s\n%s\n" % [e[0], e[1], e[2]]
 	var b: Array = [["關閉", func(): pass, true]]
-	if Updater.latest != "":
+	if G.is_ios():
+		s += "
+[color=#9fb3c8]新版本會透過 App Store 自動更新。[/color]"
+	elif Updater.latest != "":
 		b.push_front(["立即更新", func(): Updater.apply(), true])
 	else:
 		b.push_front(["檢查更新", func(): Updater.check(), false])
@@ -1272,4 +1305,6 @@ func _on_update(v: String, notes: String) -> void:
 
 func pause_menu() -> void:
 	var b: Array = [["繼續飛行", func(): main.toggle_pause(), true], ["重新開始", func(): main.restart_flight(), false], ["遊戲說明", func(): show_help(0), false], ["設定", show_settings, false], ["全螢幕", func(): G.go_fullscreen(), false], ["回主選單", func(): main.to_title(), false]]
+	if G.is_ios():
+		b = b.filter(func(e): return e[0] != "全螢幕")
 	show_dialog("暫停", "", b, 460)

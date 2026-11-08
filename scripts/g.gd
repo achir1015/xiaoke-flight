@@ -65,6 +65,7 @@ var invert_pitch := false
 var show_cabin := true
 var api_key := ""
 var ai_model := "gpt-5.4-mini"
+var ai_consent := false   # 已同意把對話送給 OpenAI（App Store 審查準則 5.1.2）
 var unlocked := 1
 var stars: Dictionary = {}
 var best: Dictionary = {}
@@ -154,6 +155,7 @@ func load_progress() -> void:
 		show_cabin = bool(cf.get_value("s", "cabin", true))
 		api_key = String(cf.get_value("s", "api_key", ""))
 		ai_model = String(cf.get_value("s", "ai_model", "gpt-5.4-mini"))
+		ai_consent = bool(cf.get_value("s", "ai_consent", api_key != ""))  # 舊版已填金鑰的視為已同意
 	elif OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios"):
 		quality = 0
 
@@ -167,6 +169,7 @@ func save_progress() -> void:
 	cf.set_value("s", "cabin", show_cabin)
 	cf.set_value("s", "api_key", api_key)
 	cf.set_value("s", "ai_model", ai_model)
+	cf.set_value("s", "ai_consent", ai_consent)
 	cf.save("user://progress.cfg")
 
 func finish_level(i: int, st: int, score: int) -> void:
@@ -178,6 +181,10 @@ func finish_level(i: int, st: int, score: int) -> void:
 	if st > 0:
 		unlocked = maxi(unlocked, mini(i + 2, LEVELS.size()))
 	save_progress()
+
+# iOS App Store 版（--ios 在電腦上模擬，用來產生商店截圖）
+func is_ios() -> bool:
+	return OS.has_feature("ios") or args.has("ios")
 
 func is_touch() -> bool:
 	return OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios") or args.has("touch")

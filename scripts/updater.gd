@@ -14,7 +14,8 @@ func _ready() -> void:
 	http.timeout = 10.0
 	add_child(http)
 	http.request_completed.connect(_done)
-	if OS.has_feature("editor") or "--no-update" in OS.get_cmdline_user_args():
+	# iOS 版由 App Store 更新，不自行檢查
+	if OS.has_feature("editor") or G.is_ios() or "--no-update" in OS.get_cmdline_user_args():
 		return
 	await get_tree().create_timer(3.0).timeout
 	check()

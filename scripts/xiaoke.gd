@@ -70,7 +70,7 @@ func ask(text: String) -> void:
 	var hit := _intent(t)
 	if hit != "":
 		_do(hit, t)
-	elif G.api_key != "":
+	elif G.api_key != "" and G.ai_consent:
 		_ai(text)
 	else:
 		_reply("x_unknown")

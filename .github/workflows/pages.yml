@@ -1,12 +1,12 @@
 name: 部署線上版到 GitHub Pages
 
 # 線上版（Godot Web 匯出）放在最新 Release 的 xiaoke-flight-web.zip，部署時解壓到網站根目錄，
-# 再放上 docs/ 裡的 version.json（遊戲用它檢查新版本）。
+# 再放上 docs/ 裡的 version.json（遊戲用它檢查新版本）與 privacy.html、support.html（App Store 用）。
 # 發佈新 Release 後要手動觸發一次（workflow_dispatch）。
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/pages.yml']
+    paths: ['.github/workflows/pages.yml', 'docs/*.html']
   workflow_dispatch:
 
 permissions:
@@ -35,6 +35,7 @@ jobs:
             unzip -q -o /tmp/xiaoke-flight-web.zip -d _site
           fi
           cp docs/version.json _site/version.json
+          cp docs/privacy.html docs/support.html _site/   # App Store 要的隱私權政策與技術支援網址
           du -sh _site; ls _site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
